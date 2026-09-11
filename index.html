@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/p5@2.3.3/lib/p5.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/p5.sound@0.4.1/dist/p5.sound.min.js"></script>
+    <meta charset="utf-8" />
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      display: flex;
+      overflow: hidden;
+      min-height: 100vh;
+      background-color: black;
+      opacity: 1;
+    }
+
+    main {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    canvas {
+      touch-action: pinch-zoom;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+
+  </head>
+  <body>
+    <main>
+      <canvas id="game-canvas"></canvas>
+    </main>
+    <script src="sketch.js"></script>
+  </body>
+</html>
