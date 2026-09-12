@@ -28,22 +28,33 @@ class Card {
 }
 
 // id starts at 0
-const CARDS = [new Card(0, "ARCHERY", 1, "RED", 2, ["demand", "junk"])];
+const CARDS = [new Card(0, "archery", 1, "red", 2, ["demand", "junk"])];
 
 const getCardImage = {
-  full: (card) => {
+  full: function (card) {
+    // 525 x 375
     const x = card.sheetIndex % 10,
       y = floor(card.sheetIndex / 10);
     return CARD_SHEET.get(x * 525, y * 375, 525, 375);
   },
-  name: (card) => {},
-  pic: (card) => {
-    const cimg = this.getCardFromSheet(card);
-    // return cimg.get()
+  pic: function (card) {
+    // 111 x 111
+    const cimg = this.full(card);
+    switch (card.picIndex) {
+      case 0:
+        return cimg.get(28, 18, 111, 111);
+      case 1:
+        return cimg.get(28, 243, 111, 111);
+      case 2:
+        return cimg.get(208, 243, 111, 111);
+      case 3:
+        return cimg.get(386, 243, 111, 111);
+    }
   },
-  desc: (card) => {
-    const cimg = this.getCardFromSheet(card);
-    // return cimg.get()
+  desc: function (card) {
+    // 370 x 155
+    const cimg = this.full(card);
+    return cimg.get(145, 83, 370, 155);
   },
 };
 
@@ -87,10 +98,14 @@ function draw() {
 
   background(20);
 
-  textSize(50);
+  textSize(40);
   fill(255);
-  text("text", 300, 100);
+  text("ARCHERY", 300, 800);
 
-  const dummyCard = new Card(floor(frameCount / 10));
-  image(getCardImage.full(dummyCard), 300, 500, 525, 375);
+  // const dummyCard = new Card(floor(frameCount / 10));
+  const dummyCard = new Card(63, "aa", 1, "red", 3, []);
+  image(getCardImage.full(dummyCard), 525 / 2, 375 / 2, 525, 375);
+
+  image(getCardImage.desc(dummyCard), 300, 500, 370, 155);
+  image(getCardImage.pic(dummyCard), 300, 700, 111, 111);
 }
