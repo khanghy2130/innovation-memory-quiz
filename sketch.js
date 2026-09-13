@@ -27,8 +27,134 @@ class Card {
   }
 }
 
-// id starts at 0
-const CARDS = [new Card(0, "archery", 1, "red", 2, ["demand", "junk"])];
+// tags: SPLAY, SCORE, JUNK, EXECUTE, WIN
+const CARDS = [
+  new Card(0, "archery", 1, "red", 2, ["junk"]),
+  new Card(1, "metalworking", 1, "red", 2, ["score"]),
+  new Card(2, "oars", 1, "red", 2, ["score"]),
+  new Card(3, "agriculture", 1, "yellow", 0, ["score"]),
+  new Card(4, "domestication", 1, "yellow", 2, [""]),
+  new Card(5, "masonry", 1, "yellow", 1, [""]),
+  new Card(6, "clothing", 1, "green", 0, ["score"]),
+  new Card(7, "sailing", 1, "green", 2, [""]),
+  new Card(8, "the wheel", 1, "green", 0, [""]),
+  new Card(9, "pottery", 1, "blue", 0, ["score"]),
+  new Card(10, "tools", 1, "blue", 0, [""]),
+  new Card(11, "writing", 1, "blue", 0, [""]),
+  new Card(12, "city states", 1, "purple", 0, [""]),
+  new Card(13, "code of laws", 1, "purple", 0, ["splay"]),
+  new Card(14, "mysticism", 1, "purple", 0, [""]),
+
+  new Card(15, "construction", 2, "red", 1, [""]),
+  new Card(16, "road building", 2, "red", 2, [""]),
+  new Card(17, "canal building", 2, "yellow", 0, ["score", "junk"]),
+  new Card(18, "fermenting", 2, "yellow", 2, ["junk"]),
+  new Card(19, "currency", 2, "green", 2, ["score"]),
+  new Card(20, "mapmaking", 2, "green", 0, ["score"]),
+  new Card(21, "calendar", 2, "blue", 0, [""]),
+  new Card(22, "mathematics", 2, "blue", 0, [""]),
+  new Card(23, "monotheism", 2, "purple", 0, ["score"]),
+  new Card(24, "philosophy", 2, "purple", 0, ["splay", "score"]),
+
+  new Card(25, "engineering", 3, "red", 1, ["score", "splay"]),
+  new Card(26, "optics", 3, "red", 3, ["score"]),
+  new Card(27, "machinery", 3, "yellow", 2, ["score", "splay"]),
+  new Card(28, "medicine", 3, "yellow", 3, ["score", "junk"]),
+  new Card(29, "compass", 3, "green", 0, [""]),
+  new Card(30, "paper", 3, "green", 0, ["splay", "score"]),
+  new Card(31, "alchemy", 3, "blue", 0, ["score"]),
+  new Card(32, "translation", 3, "blue", 0, [""]),
+  new Card(33, "education", 3, "purple", 3, [""]),
+  new Card(34, "feudalism", 3, "purple", 0, ["junk", "splay"]),
+
+  new Card(35, "colonialism", 4, "red", 0, ["junk"]),
+  new Card(36, "gunpowder", 4, "red", 0, ["score"]),
+  new Card(37, "anatomy", 4, "yellow", 3, ["junk"]),
+  new Card(38, "perspective", 4, "yellow", 0, ["score"]),
+  new Card(39, "invention", 4, "green", 0, ["splay"]),
+  new Card(40, "navigation", 4, "green", 0, ["score"]),
+  new Card(41, "experimentation", 4, "blue", 0, [""]),
+  new Card(42, "printing press", 4, "blue", 0, ["splay"]),
+  new Card(43, "enterprise", 4, "purple", 0, ["splay"]),
+  new Card(44, "reformation", 4, "purple", 2, ["splay"]),
+
+  new Card(45, "coal", 5, "red", 3, ["splay", "score"]),
+  new Card(46, "the pirate code", 5, "red", 3, ["score"]),
+  new Card(47, "statistics", 5, "yellow", 3, ["splay"]),
+  new Card(48, "steam engine", 5, "yellow", 0, ["score", "junk"]),
+  new Card(49, "banking", 5, "green", 2, ["splay"]),
+  new Card(50, "measurement", 5, "green", 3, ["splay"]),
+  new Card(51, "chemistry", 5, "blue", 3, ["splay", "score"]),
+  new Card(52, "physics", 5, "blue", 3, [""]),
+  new Card(53, "astronomy", 5, "purple", 3, [""]),
+  new Card(54, "societies", 5, "purple", 1, [""]),
+
+  new Card(55, "industrialization", 6, "red", 3, ["splay"]),
+  new Card(56, "machine tools", 6, "red", 2, ["score"]),
+  new Card(57, "canning", 6, "yellow", 0, ["score", "splay"]),
+  new Card(58, "vaccination", 6, "yellow", 3, [""]),
+  new Card(59, "classification", 6, "green", 3, [""]),
+  new Card(60, "metric system", 6, "green", 0, ["splay"]),
+  new Card(61, "atomic theory", 6, "blue", 3, ["splay"]),
+  new Card(62, "encyclopedia", 6, "blue", 0, ["junk"]),
+  new Card(63, "democracy", 6, "purple", 3, ["score"]),
+  new Card(64, "emancipation", 6, "purple", 3, ["score", "splay"]),
+
+  new Card(65, "combustion", 7, "red", 3, ["score"]),
+  new Card(66, "explosives", 7, "red", 0, [""]),
+  new Card(67, "refrigeration", 7, "yellow", 0, ["score"]),
+  new Card(68, "sanitation", 7, "yellow", 2, ["junk"]),
+  new Card(69, "bicycle", 7, "green", 3, ["score"]),
+  new Card(70, "electricity", 7, "green", 2, [""]),
+  new Card(71, "evolution", 7, "blue", 3, ["score"]),
+  new Card(72, "publications", 7, "blue", 0, ["splay", "junk"]),
+  new Card(73, "lighting", 7, "purple", 0, ["score"]),
+  new Card(74, "railroad", 7, "purple", 3, ["splay"]),
+
+  new Card(75, "flight", 8, "red", 1, ["splay"]),
+  new Card(76, "mobility", 8, "red", 0, ["score"]),
+  new Card(77, "antibiotics", 8, "yellow", 3, [""]),
+  new Card(78, "skyscrapers", 8, "yellow", 0, [""]),
+  new Card(79, "corporations", 8, "green", 0, ["score"]),
+  new Card(80, "mass media", 8, "green", 1, ["splay"]),
+  new Card(81, "quantum theory", 8, "blue", 3, ["score"]),
+  new Card(82, "rocketry", 8, "blue", 3, [""]),
+  new Card(83, "empiricism", 8, "purple", 3, ["splay", "win"]),
+  new Card(84, "socialism", 8, "purple", 1, ["junk"]),
+
+  new Card(85, "composites", 9, "red", 2, ["score"]),
+  new Card(86, "fission", 9, "red", 0, ["junk"]),
+  new Card(87, "ecology", 9, "yellow", 3, ["score", "junk"]),
+  new Card(88, "suburbia", 9, "yellow", 0, ["score", "junk"]),
+  new Card(89, "collaboration", 9, "green", 0, ["win"]),
+  new Card(90, "satellites", 9, "green", 0, ["splay", "execute"]),
+  new Card(91, "computers", 9, "blue", 1, ["splay", "execute"]),
+  new Card(92, "genetics", 9, "blue", 3, ["score"]),
+  new Card(93, "services", 9, "purple", 0, [""]),
+  new Card(94, "specialization", 9, "purple", 0, ["splay"]),
+
+  new Card(95, "miniaturization", 10, "red", 0, ["junk"]),
+  new Card(96, "robotics", 10, "red", 0, ["score", "execute"]),
+  new Card(97, "globalization", 10, "yellow", 0, ["win"]),
+  new Card(98, "stem cells", 10, "yellow", 0, ["score"]),
+  new Card(99, "databases", 10, "green", 0, [""]),
+  new Card(100, "self service", 10, "green", 0, ["win", "execute"]),
+  new Card(101, "bioengineering", 10, "blue", 3, ["score", "win"]),
+  new Card(102, "software", 10, "blue", 3, ["score", "execute"]),
+  new Card(103, "a.i.", 10, "purple", 3, ["score", "win"]),
+  new Card(104, "the internet", 10, "purple", 0, ["splay", "score"]),
+
+  new Card(105, "astrogeology", 11, "red", 1, ["splay", "win"]),
+  new Card(106, "fusion", 11, "red", 3, ["score"]),
+  new Card(107, "near-field comm", 11, "yellow", 0, ["score", "execute"]),
+  new Card(108, "reclamation", 11, "yellow", 2, [""]),
+  new Card(109, "hypersonics", 11, "green", 3, [""]),
+  new Card(110, "space traffic", 11, "green", 3, ["win", "score", "splay"]),
+  new Card(111, "climatology", 11, "blue", 1, [""]),
+  new Card(112, "solar sailing", 11, "blue", 3, ["splay", "win"]),
+  new Card(113, "escapism", 11, "purple", 1, ["junk", "execute"]),
+  new Card(114, "whataboutism", 11, "purple", 1, ["score"]),
+];
 
 const getCardImage = {
   full: function (card) {
@@ -98,14 +224,22 @@ function draw() {
 
   background(20);
 
-  textSize(40);
+  const dummyCard = CARDS[floor(frameCount / 10) % CARDS.length];
+  // image(getCardImage.full(dummyCard), 525 / 2, 375 / 2, 525, 375);
+
+  textSize(36);
+  textAlign(LEFT, CENTER);
   fill(255);
-  text("ARCHERY", 300, 800);
+  text(dummyCard.name.toUpperCase(), 150, 50);
 
-  // const dummyCard = new Card(floor(frameCount / 10));
-  const dummyCard = new Card(63, "aa", 1, "red", 3, []);
-  image(getCardImage.full(dummyCard), 525 / 2, 375 / 2, 525, 375);
-
-  image(getCardImage.desc(dummyCard), 300, 500, 370, 155);
-  image(getCardImage.pic(dummyCard), 300, 700, 111, 111);
+  image(getCardImage.pic(dummyCard), 60, 80, 100, 100);
+  for (let i = 0; i < 4; i++) {
+    image(
+      getCardImage.desc(dummyCard),
+      360,
+      180 + 200 * i,
+      370 * 1.2,
+      155 * 1.2,
+    );
+  }
 }
