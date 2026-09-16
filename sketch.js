@@ -1,6 +1,14 @@
 let mx = 0,
   my = 0,
-  touchCountdown = 0;
+  touchCountdown = 0,
+  isLoaded = false;
+
+let scene = "MENU"; // MENU, QUIZ, RESULT
+let optionsControl = {
+  selectedAges: [1, 2, 3, 4],
+  qCount: 10,
+  mode: 0, // name > effect, effect > name, name > color + pic + age
+};
 
 let CARD_SHEET; // 5250 x 4500; each is 525 x 375
 
@@ -25,6 +33,132 @@ class Card {
       this.sheetIndex = id + 5;
     }
   }
+}
+
+class Btn {
+  constructor(x, y, w, h, checkHighlight, renderContent, clicked) {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.checkHighlight = checkHighlight;
+    this.renderContent = renderContent;
+    this.clicked = clicked;
+
+    this.isHovered = false;
+  }
+
+  render() {
+    // check hover
+    this.isHovered =
+      mx > this.x - this.w / 2 &&
+      mx < this.x + this.w / 2 &&
+      my > this.y - this.h / 2 &&
+      my < this.y + this.h / 2;
+
+    push();
+    translate(this.x, this.y);
+
+    if (this.checkHighlight && this.checkHighlight()) {
+      noFill();
+      stroke(30, 180, 30);
+      strokeWeight(6);
+      rect(0, 0, this.w, this.h, 10);
+    }
+
+    // render rectangle background
+    noStroke();
+    fill(50);
+    rect(0, 0, this.w, this.h, 10);
+
+    this.renderContent();
+    pop();
+  }
+}
+
+let buttons;
+function createButtons() {
+  buttons = {
+    menu: {
+      begin: new Btn(
+        470,
+        700,
+        200,
+        100,
+        null,
+        () => {
+          textSize(48);
+          fill(240, 240, 50);
+          text("Begin", 0, 0);
+        },
+        () => {
+          console.log("begin clicked");
+        },
+      ),
+
+      // dynamically create 11 buttons
+      ages: Array.from({ length: 11 }, (_, i) => {
+        const age = i + 1;
+        return new Btn(
+          100 + ((i % 6) + (age > 6 ? 0.5 : 0)) * 80,
+          160 + floor(i / 6) * 80,
+          65,
+          65,
+          () => optionsControl.selectedAges.includes(age),
+          () => {
+            fill(255);
+            text(age, 0, 0);
+          },
+          () => {
+            optionsControl.selectedAges = optionsControl.selectedAges.includes(
+              age,
+            )
+              ? optionsControl.selectedAges.filter((a) => a !== age)
+              : [...optionsControl.selectedAges, age];
+          },
+        );
+      }),
+
+      // dynamically create 5 buttons (10 questions, 15, 20, 25, 30)
+      qCounts: Array.from({ length: 5 }, (_, i) => {
+        const qCount = 10 + i * 5;
+        return new Btn(
+          140 + i * 80,
+          440,
+          65,
+          65,
+          () => optionsControl.qCount === qCount,
+          () => {
+            fill(255);
+            text(qCount, 0, 0);
+          },
+          () => {
+            optionsControl.qCount = qCount;
+          },
+        );
+      }),
+
+      // dynamically create 3 buttons
+      modes: Array.from({ length: 3 }, (_, i) => {
+        const mode = i;
+        const modeNames = ["Guess Effect", "Guess Name", "Guess Color+"];
+        return new Btn(
+          180,
+          640 + i * 80,
+          260,
+          65,
+          () => optionsControl.mode === mode,
+          () => {
+            fill(255);
+            text(modeNames[mode], 0, 0);
+          },
+          () => {
+            optionsControl.mode = mode;
+          },
+        );
+      }),
+    },
+  };
 }
 
 // tags: SPLAY, SCORE, JUNK, EXECUTE, WIN
@@ -164,7 +298,7 @@ const getCardImage = {
     return CARD_SHEET.get(x * 525, y * 375, 525, 375);
   },
   pic: function (card) {
-    // 111 x 111
+    // 1:1
     const cimg = this.full(card);
     switch (card.picIndex) {
       case 0:
@@ -181,6 +315,42 @@ const getCardImage = {
     // 370 x 155
     const cimg = this.full(card);
     return cimg.get(145, 83, 370, 155);
+  },
+  age: function (card) {
+    // 1:1
+    const cimg = this.full(card);
+    return cimg.get(445, 18, 60, 60);
+  },
+};
+
+const renderScene = {
+  menu: function () {
+    // render age buttons
+    textSize(42);
+    fill(255);
+    text("Ages", 300, 80);
+    textSize(32);
+    buttons.menu.ages.forEach((a) => a.render());
+
+    // render question count buttons
+    textSize(42);
+    fill(255);
+    text("Questions", 300, 360);
+    textSize(32);
+    buttons.menu.qCounts.forEach((q) => q.render());
+
+    // render mode buttons
+    textSize(42);
+    fill(255);
+    text("Mode", 300, 560);
+    textSize(32);
+    buttons.menu.modes.forEach((m) => m.render());
+
+    // render begin button
+    buttons.menu.begin.render();
+  },
+  quiz: function () {
+    //
   },
 };
 
@@ -211,9 +381,13 @@ async function setup() {
   frameRate(60);
 
   CARD_SHEET = await loadImage("./cards.jpg");
+  createButtons();
+  isLoaded = true;
 }
 
 function draw() {
+  if (!isLoaded) return;
+
   // rescale canvas and mouse position
   mx = (mouseX * 600) / width;
   my = (mouseY * 600) / width;
@@ -224,7 +398,16 @@ function draw() {
 
   background(20);
 
-  const dummyCard = CARDS[floor(frameCount / 10) % CARDS.length];
+  switch (scene) {
+    case "MENU":
+      renderScene.menu();
+      break;
+  }
+
+  return;
+
+  const dummyCard = CARDS[0];
+  // const dummyCard = CARDS[floor(frameCount / 10) % CARDS.length];
   // image(getCardImage.full(dummyCard), 525 / 2, 375 / 2, 525, 375);
 
   textSize(36);
@@ -233,6 +416,7 @@ function draw() {
   text(dummyCard.name.toUpperCase(), 150, 50);
 
   image(getCardImage.pic(dummyCard), 60, 80, 100, 100);
+  image(getCardImage.age(dummyCard), 60, 200, 100, 100);
   for (let i = 0; i < 4; i++) {
     image(
       getCardImage.desc(dummyCard),
@@ -241,5 +425,25 @@ function draw() {
       370 * 1.2,
       155 * 1.2,
     );
+  }
+}
+
+function mousePressed() {
+  if (touchCountdown > 0) return;
+  touchCountdown = 10; // delay next input
+
+  switch (scene) {
+    case "MENU":
+      buttons.menu.ages.forEach((a) => {
+        if (a.isHovered) a.clicked();
+      });
+      buttons.menu.qCounts.forEach((q) => {
+        if (q.isHovered) q.clicked();
+      });
+      buttons.menu.modes.forEach((m) => {
+        if (m.isHovered) m.clicked();
+      });
+      if (buttons.menu.begin.isHovered) buttons.menu.begin.clicked();
+      break;
   }
 }
