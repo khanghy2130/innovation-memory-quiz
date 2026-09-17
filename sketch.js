@@ -3,14 +3,15 @@ let mx = 0,
   touchCountdown = 0,
   isLoaded = false;
 
-let scene = "MENU"; // MENU, QUIZ, RESULT
+let scene = "MENU"; // LISTS, MENU, QUIZ, RESULT
 let optionsControl = {
   selectedAges: [1, 2, 3, 4],
   qCount: 10,
-  mode: 0, // name > effect, effect > name, name > color + pic + age
+  mode: 0, // name > effect, effect > pic
 };
 
 let CARD_SHEET; // 5250 x 4500; each is 525 x 375
+let CORRECT_ICON, WRONG_ICON;
 
 class Card {
   constructor(id, name, age, color, picIndex, tags) {
@@ -80,20 +81,34 @@ let buttons;
 function createButtons() {
   buttons = {
     menu: {
+      lists: new Btn(
+        520,
+        50,
+        100,
+        50,
+        null,
+        () => {
+          textSize(22);
+          fill(200);
+          text("Lists", 0, 0);
+        },
+        () => {
+          console.log("clicked");
+        },
+      ),
+
       begin: new Btn(
         470,
-        700,
+        680,
         200,
-        100,
+        150,
         null,
         () => {
           textSize(48);
           fill(240, 240, 50);
           text("Begin", 0, 0);
         },
-        () => {
-          console.log("begin clicked");
-        },
+        initQuiz,
       ),
 
       // dynamically create 11 buttons
@@ -137,11 +152,9 @@ function createButtons() {
           },
         );
       }),
-
-      // dynamically create 3 buttons
-      modes: Array.from({ length: 3 }, (_, i) => {
+      modes: Array.from({ length: 2 }, (_, i) => {
         const mode = i;
-        const modeNames = ["Guess Effect", "Guess Name", "Guess Color+"];
+        const modeNames = ["Guess Effect", "Guess Name"];
         return new Btn(
           180,
           640 + i * 80,
@@ -159,6 +172,89 @@ function createButtons() {
       }),
     },
   };
+}
+
+let quizControl = {
+  questionIds: [], // card ids
+  currentQuestionIndex: 0,
+  answerIds: [], // card ids, for current question
+
+  incorrectCount: 0,
+  // enable inspect mode after selected the correct answer, allow click any answer to view its full card
+  inspectModeEnabled: false,
+  inspectCardId: null, // null is not inspecting
+
+  hoveredAnswerIndex: null,
+  markedAnswers: [], // undefined, "correct", "wrong". to render feedback after selecting
+};
+
+function initQuiz() {
+  const qc = quizControl;
+
+  scene = "QUIZ";
+  qc.currentQuestionIndex = 0;
+  qc.incorrectCount = 0;
+  qc.inspectModeEnabled = false;
+  qc.inspectCardId = null;
+
+  // get random unique cards to quiz from the selected ages,
+  qc.questionIds = shuffle(
+    CARDS.filter((c) => optionsControl.selectedAges.includes(c.age)).map(
+      (c) => c.id,
+    ),
+  ).slice(0, optionsControl.qCount);
+
+  // generate answers for the first question
+  generateAnswers();
+}
+
+function generateAnswers() {
+  const qc = quizControl;
+  const currentCard = CARDS[qc.questionIds[qc.currentQuestionIndex]];
+  qc.markedAnswers = [];
+  switch (optionsControl.mode) {
+    /* name > effect: 
+      make 4 answers (1 correct and 3 random others from the same age and an adjacent age)
+    */
+    case 0:
+      const adjacentAges = [currentCard.age - 1, currentCard.age + 1].filter(
+        (a) => a >= 1 && a <= 11,
+      );
+      const pickedAdjAge = random(adjacentAges);
+      const possibleAnswerIds = CARDS.filter(
+        (c) =>
+          c.color === currentCard.color &&
+          (c.age === currentCard.age || pickedAdjAge === c.age),
+      ).map((c) => c.id);
+
+      qc.answerIds = shuffle(possibleAnswerIds).slice(0, 4);
+      // make sure there is correct answer
+      if (!qc.answerIds.includes(currentCard.id)) {
+        qc.answerIds[0] = currentCard.id;
+        qc.answerIds = shuffle(qc.answerIds);
+      }
+      return;
+
+    /* effect > pic: 
+      make 6 answers (1 correct, 5 random others with the same color)
+    */
+    case 1:
+      const possibleAnswerIds2 = CARDS.filter(
+        (c) => c.color === currentCard.color,
+      ).map((c) => c.id);
+
+      qc.answerIds = shuffle(possibleAnswerIds2).slice(0, 6);
+      // make sure there is correct answer
+      if (!qc.answerIds.includes(currentCard.id)) {
+        qc.answerIds[0] = currentCard.id;
+        qc.answerIds = shuffle(qc.answerIds);
+      }
+      return;
+
+    default:
+      quizControl.answerIds = [];
+      return;
+  }
 }
 
 // tags: SPLAY, SCORE, JUNK, EXECUTE, WIN
@@ -325,6 +421,8 @@ const getCardImage = {
 
 const renderScene = {
   menu: function () {
+    textAlign(CENTER, CENTER);
+
     // render age buttons
     textSize(42);
     fill(255);
@@ -346,11 +444,115 @@ const renderScene = {
     textSize(32);
     buttons.menu.modes.forEach((m) => m.render());
 
-    // render begin button
+    // render begin & lists buttons
     buttons.menu.begin.render();
+    buttons.menu.lists.render();
   },
   quiz: function () {
-    //
+    const qc = quizControl;
+    // reset hovered answer index
+    qc.hoveredAnswerIndex = null;
+
+    // render wrong counts on the left
+    image(WRONG_ICON, 40, 300, 45, 45);
+    textSize(40);
+    fill(255);
+    textAlign(LEFT, CENTER);
+    text(qc.incorrectCount, 75, 300);
+
+    // name > effect
+    if (optionsControl.mode === 0) {
+      // render current name and pic on top
+      textSize(36);
+      fill(255);
+      const currentCard = CARDS[qc.questionIds[qc.currentQuestionIndex]];
+      textAlign(LEFT, CENTER);
+      text(currentCard.name.toUpperCase(), 150, 30);
+      image(getCardImage.pic(currentCard), 60, 60, 100, 100);
+
+      // render 4 answers (desc) vertically
+      for (let i = 0; i < 4; i++) {
+        const answerCard = CARDS[qc.answerIds[i]];
+        image(
+          getCardImage.desc(answerCard),
+          360,
+          170 + 200 * i,
+          370 * 1.2,
+          155 * 1.2,
+        );
+        // render correct/wrong icon at bottom right of image
+        if (qc.markedAnswers[answerCard.id] === "correct") {
+          image(
+            CORRECT_ICON,
+            360 + (370 * 1.2) / 2 - 20,
+            170 + 200 * i + (155 * 1.2) / 2 - 20,
+            40,
+            40,
+          );
+        } else if (qc.markedAnswers[answerCard.id] === "wrong") {
+          image(
+            WRONG_ICON,
+            360 + (370 * 1.2) / 2 - 20,
+            170 + 200 * i + (155 * 1.2) / 2 - 20,
+            40,
+            40,
+          );
+        }
+
+        // set hover
+        if (
+          mx > 360 - (370 * 1.2) / 2 &&
+          mx < 360 + (370 * 1.2) / 2 &&
+          my > 170 + 200 * i - (155 * 1.2) / 2 &&
+          my < 170 + 200 * i + (155 * 1.2) / 2
+        ) {
+          qc.hoveredAnswerIndex = i;
+        }
+      }
+    }
+
+    // effect > pic
+    else if (optionsControl.mode === 1) {
+      // render current effect (desc)
+      const currentCard = CARDS[qc.questionIds[qc.currentQuestionIndex]];
+      image(getCardImage.desc(currentCard), 300, 140, 370 * 1.4, 155 * 1.4);
+
+      // render 6 answers (pic) in 2 columns
+      for (let i = 0; i < 6; i++) {
+        const answerCard = CARDS[qc.answerIds[i]];
+        const col = i % 2;
+        const row = floor(i / 2);
+        image(
+          getCardImage.pic(answerCard),
+          280 + col * 200,
+          360 + row * 200,
+          160,
+          160,
+        );
+        // render correct/wrong icon at bottom right of image
+        if (qc.markedAnswers[answerCard.id] === "correct") {
+          image(
+            CORRECT_ICON,
+            280 + col * 200 + 60,
+            360 + row * 200 + 60,
+            40,
+            40,
+          );
+        } else if (qc.markedAnswers[answerCard.id] === "wrong") {
+          image(WRONG_ICON, 280 + col * 200 + 60, 360 + row * 200 + 60, 40, 40);
+        }
+
+        // set hover
+        if (
+          mx > 280 + col * 200 - 80 &&
+          mx < 280 + col * 200 + 80 &&
+          my > 360 + row * 200 - 80 &&
+          my < 360 + row * 200 + 80
+        ) {
+          qc.hoveredAnswerIndex = i;
+        }
+      }
+    }
   },
 };
 
@@ -373,7 +575,6 @@ async function setup() {
   createCanvas(w, h, P2D, document.getElementById("game-canvas"));
 
   // p5 configs
-  textAlign(CENTER, CENTER);
   rectMode(CENTER);
   imageMode(CENTER);
   angleMode(RADIANS);
@@ -381,6 +582,8 @@ async function setup() {
   frameRate(60);
 
   CARD_SHEET = await loadImage("./cards.jpg");
+  CORRECT_ICON = await loadImage("./correct.png");
+  WRONG_ICON = await loadImage("./wrong.png");
   createButtons();
   isLoaded = true;
 }
@@ -402,6 +605,8 @@ function draw() {
     case "MENU":
       renderScene.menu();
       break;
+    case "QUIZ":
+      renderScene.quiz();
   }
 
   return;
@@ -443,7 +648,26 @@ function mousePressed() {
       buttons.menu.modes.forEach((m) => {
         if (m.isHovered) m.clicked();
       });
-      if (buttons.menu.begin.isHovered) buttons.menu.begin.clicked();
-      break;
+      if (buttons.menu.begin.isHovered) return buttons.menu.begin.clicked();
+      if (buttons.menu.lists.isHovered) return buttons.menu.lists.clicked();
+      return;
+    case "QUIZ":
+      const qc = quizControl;
+      if (qc.hoveredAnswerIndex !== null) {
+        const selectedAnswerId = qc.answerIds[qc.hoveredAnswerIndex];
+        // mark selected answer if not already
+        if (qc.markedAnswers[selectedAnswerId] === undefined) {
+          const currentCard = CARDS[qc.questionIds[qc.currentQuestionIndex]];
+          if (selectedAnswerId === currentCard.id) {
+            qc.markedAnswers[selectedAnswerId] = "correct";
+            // enable inspect mode if selected correct answer
+            qc.inspectModeEnabled = true;
+          } else {
+            qc.markedAnswers[selectedAnswerId] = "wrong";
+            qc.incorrectCount++;
+          }
+        }
+      }
+      return;
   }
 }
