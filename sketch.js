@@ -3,7 +3,7 @@ let mx = 0,
   touchCountdown = 0,
   isLoaded = false;
 
-let scene = "MENU"; // LISTS, MENU, QUIZ, RESULT
+let scene = "MENU"; // LISTS, INSPECT, MENU, QUIZ, RESULT
 let optionsControl = {
   selectedAges: [1, 2, 3, 4],
   qCount: 10,
@@ -134,9 +134,9 @@ function createButtons() {
         );
       }),
 
-      // dynamically create 5 buttons (10 questions, 15, 20, 25, 30)
+      // dynamically create buttons (5 questions, 10, 15, 20, 25)
       qCounts: Array.from({ length: 5 }, (_, i) => {
-        const qCount = 10 + i * 5;
+        const qCount = 5 + i * 5;
         return new Btn(
           140 + i * 80,
           440,
@@ -154,7 +154,7 @@ function createButtons() {
       }),
       modes: Array.from({ length: 2 }, (_, i) => {
         const mode = i;
-        const modeNames = ["Guess Effect", "Guess Name"];
+        const modeNames = ["Guess Effect", "Guess Image"];
         return new Btn(
           180,
           640 + i * 80,
@@ -171,8 +171,76 @@ function createButtons() {
         );
       }),
     },
+    quiz: {
+      next: new Btn(
+        68,
+        700,
+        100,
+        100,
+        null,
+        () => {
+          textSize(32);
+          fill(240, 240, 50);
+          text("Next", 0, 0);
+        },
+        () => {
+          const qc = quizControl;
+          if (!qc.inspectModeEnabled) return; // only allow next if selected the correct answer
+          if (qc.currentQuestionIndex < qc.questionIds.length - 1) {
+            qc.currentQuestionIndex++;
+            generateAnswers();
+            qc.inspectModeEnabled = false;
+            qc.inspectCardId = null;
+          } else {
+            scene = "RESULT";
+          }
+        },
+      ),
+    },
+    inspect: {
+      google: new Btn(
+        100,
+        520,
+        160,
+        50,
+        null,
+        () => {
+          textSize(28);
+          fill(200);
+          text(`Google`, 0, 0);
+        },
+        () => {
+          const card = CARDS[inspectControl.id];
+          const query = `What is ${card.name} and its origin?`;
+          const url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+          window.open(url, "_blank");
+        },
+      ),
+    },
+    result: {
+      menu: new Btn(
+        300,
+        800,
+        160,
+        60,
+        null,
+        () => {
+          textSize(36);
+          fill(200);
+          text(`Menu`, 0, 0);
+        },
+        () => {
+          scene = "MENU";
+        },
+      ),
+    },
   };
 }
+
+let inspectControl = {
+  id: 0,
+  prevScene: "LISTS",
+};
 
 let quizControl = {
   questionIds: [], // card ids
@@ -263,26 +331,26 @@ const CARDS = [
   new Card(1, "metalworking", 1, "red", 2, ["score"]),
   new Card(2, "oars", 1, "red", 2, ["score"]),
   new Card(3, "agriculture", 1, "yellow", 0, ["score"]),
-  new Card(4, "domestication", 1, "yellow", 2, [""]),
-  new Card(5, "masonry", 1, "yellow", 1, [""]),
+  new Card(4, "domestication", 1, "yellow", 2, []),
+  new Card(5, "masonry", 1, "yellow", 1, []),
   new Card(6, "clothing", 1, "green", 0, ["score"]),
-  new Card(7, "sailing", 1, "green", 2, [""]),
-  new Card(8, "the wheel", 1, "green", 0, [""]),
+  new Card(7, "sailing", 1, "green", 2, []),
+  new Card(8, "the wheel", 1, "green", 0, []),
   new Card(9, "pottery", 1, "blue", 0, ["score"]),
-  new Card(10, "tools", 1, "blue", 0, [""]),
-  new Card(11, "writing", 1, "blue", 0, [""]),
-  new Card(12, "city states", 1, "purple", 0, [""]),
+  new Card(10, "tools", 1, "blue", 0, []),
+  new Card(11, "writing", 1, "blue", 0, []),
+  new Card(12, "city states", 1, "purple", 0, []),
   new Card(13, "code of laws", 1, "purple", 0, ["splay"]),
-  new Card(14, "mysticism", 1, "purple", 0, [""]),
+  new Card(14, "mysticism", 1, "purple", 0, []),
 
-  new Card(15, "construction", 2, "red", 1, [""]),
-  new Card(16, "road building", 2, "red", 2, [""]),
+  new Card(15, "construction", 2, "red", 1, []),
+  new Card(16, "road building", 2, "red", 2, []),
   new Card(17, "canal building", 2, "yellow", 0, ["score", "junk"]),
   new Card(18, "fermenting", 2, "yellow", 2, ["junk"]),
   new Card(19, "currency", 2, "green", 2, ["score"]),
   new Card(20, "mapmaking", 2, "green", 0, ["score"]),
-  new Card(21, "calendar", 2, "blue", 0, [""]),
-  new Card(22, "mathematics", 2, "blue", 0, [""]),
+  new Card(21, "calendar", 2, "blue", 0, []),
+  new Card(22, "mathematics", 2, "blue", 0, []),
   new Card(23, "monotheism", 2, "purple", 0, ["score"]),
   new Card(24, "philosophy", 2, "purple", 0, ["splay", "score"]),
 
@@ -290,11 +358,11 @@ const CARDS = [
   new Card(26, "optics", 3, "red", 3, ["score"]),
   new Card(27, "machinery", 3, "yellow", 2, ["score", "splay"]),
   new Card(28, "medicine", 3, "yellow", 3, ["score", "junk"]),
-  new Card(29, "compass", 3, "green", 0, [""]),
+  new Card(29, "compass", 3, "green", 0, []),
   new Card(30, "paper", 3, "green", 0, ["splay", "score"]),
   new Card(31, "alchemy", 3, "blue", 0, ["score"]),
-  new Card(32, "translation", 3, "blue", 0, [""]),
-  new Card(33, "education", 3, "purple", 3, [""]),
+  new Card(32, "translation", 3, "blue", 0, []),
+  new Card(33, "education", 3, "purple", 3, []),
   new Card(34, "feudalism", 3, "purple", 0, ["junk", "splay"]),
 
   new Card(35, "colonialism", 4, "red", 0, ["junk"]),
@@ -303,7 +371,7 @@ const CARDS = [
   new Card(38, "perspective", 4, "yellow", 0, ["score"]),
   new Card(39, "invention", 4, "green", 0, ["splay"]),
   new Card(40, "navigation", 4, "green", 0, ["score"]),
-  new Card(41, "experimentation", 4, "blue", 0, [""]),
+  new Card(41, "experimentation", 4, "blue", 0, []),
   new Card(42, "printing press", 4, "blue", 0, ["splay"]),
   new Card(43, "enterprise", 4, "purple", 0, ["splay"]),
   new Card(44, "reformation", 4, "purple", 2, ["splay"]),
@@ -315,15 +383,15 @@ const CARDS = [
   new Card(49, "banking", 5, "green", 2, ["splay"]),
   new Card(50, "measurement", 5, "green", 3, ["splay"]),
   new Card(51, "chemistry", 5, "blue", 3, ["splay", "score"]),
-  new Card(52, "physics", 5, "blue", 3, [""]),
-  new Card(53, "astronomy", 5, "purple", 3, [""]),
-  new Card(54, "societies", 5, "purple", 1, [""]),
+  new Card(52, "physics", 5, "blue", 3, []),
+  new Card(53, "astronomy", 5, "purple", 3, []),
+  new Card(54, "societies", 5, "purple", 1, []),
 
   new Card(55, "industrialization", 6, "red", 3, ["splay"]),
   new Card(56, "machine tools", 6, "red", 2, ["score"]),
   new Card(57, "canning", 6, "yellow", 0, ["score", "splay"]),
-  new Card(58, "vaccination", 6, "yellow", 3, [""]),
-  new Card(59, "classification", 6, "green", 3, [""]),
+  new Card(58, "vaccination", 6, "yellow", 3, []),
+  new Card(59, "classification", 6, "green", 3, []),
   new Card(60, "metric system", 6, "green", 0, ["splay"]),
   new Card(61, "atomic theory", 6, "blue", 3, ["splay"]),
   new Card(62, "encyclopedia", 6, "blue", 0, ["junk"]),
@@ -331,11 +399,11 @@ const CARDS = [
   new Card(64, "emancipation", 6, "purple", 3, ["score", "splay"]),
 
   new Card(65, "combustion", 7, "red", 3, ["score"]),
-  new Card(66, "explosives", 7, "red", 0, [""]),
+  new Card(66, "explosives", 7, "red", 0, []),
   new Card(67, "refrigeration", 7, "yellow", 0, ["score"]),
   new Card(68, "sanitation", 7, "yellow", 2, ["junk"]),
   new Card(69, "bicycle", 7, "green", 3, ["score"]),
-  new Card(70, "electricity", 7, "green", 2, [""]),
+  new Card(70, "electricity", 7, "green", 2, []),
   new Card(71, "evolution", 7, "blue", 3, ["score"]),
   new Card(72, "publications", 7, "blue", 0, ["splay", "junk"]),
   new Card(73, "lighting", 7, "purple", 0, ["score"]),
@@ -343,12 +411,12 @@ const CARDS = [
 
   new Card(75, "flight", 8, "red", 1, ["splay"]),
   new Card(76, "mobility", 8, "red", 0, ["score"]),
-  new Card(77, "antibiotics", 8, "yellow", 3, [""]),
-  new Card(78, "skyscrapers", 8, "yellow", 0, [""]),
+  new Card(77, "antibiotics", 8, "yellow", 3, []),
+  new Card(78, "skyscrapers", 8, "yellow", 0, []),
   new Card(79, "corporations", 8, "green", 0, ["score"]),
   new Card(80, "mass media", 8, "green", 1, ["splay"]),
   new Card(81, "quantum theory", 8, "blue", 3, ["score"]),
-  new Card(82, "rocketry", 8, "blue", 3, [""]),
+  new Card(82, "rocketry", 8, "blue", 3, []),
   new Card(83, "empiricism", 8, "purple", 3, ["splay", "win"]),
   new Card(84, "socialism", 8, "purple", 1, ["junk"]),
 
@@ -360,14 +428,14 @@ const CARDS = [
   new Card(90, "satellites", 9, "green", 0, ["splay", "execute"]),
   new Card(91, "computers", 9, "blue", 1, ["splay", "execute"]),
   new Card(92, "genetics", 9, "blue", 3, ["score"]),
-  new Card(93, "services", 9, "purple", 0, [""]),
+  new Card(93, "services", 9, "purple", 0, []),
   new Card(94, "specialization", 9, "purple", 0, ["splay"]),
 
   new Card(95, "miniaturization", 10, "red", 0, ["junk"]),
   new Card(96, "robotics", 10, "red", 0, ["score", "execute"]),
   new Card(97, "globalization", 10, "yellow", 0, ["win"]),
   new Card(98, "stem cells", 10, "yellow", 0, ["score"]),
-  new Card(99, "databases", 10, "green", 0, [""]),
+  new Card(99, "databases", 10, "green", 0, []),
   new Card(100, "self service", 10, "green", 0, ["win", "execute"]),
   new Card(101, "bioengineering", 10, "blue", 3, ["score", "win"]),
   new Card(102, "software", 10, "blue", 3, ["score", "execute"]),
@@ -377,10 +445,10 @@ const CARDS = [
   new Card(105, "astrogeology", 11, "red", 1, ["splay", "win"]),
   new Card(106, "fusion", 11, "red", 3, ["score"]),
   new Card(107, "near-field comm", 11, "yellow", 0, ["score", "execute"]),
-  new Card(108, "reclamation", 11, "yellow", 2, [""]),
-  new Card(109, "hypersonics", 11, "green", 3, [""]),
+  new Card(108, "reclamation", 11, "yellow", 2, []),
+  new Card(109, "hypersonics", 11, "green", 3, []),
   new Card(110, "space traffic", 11, "green", 3, ["win", "score", "splay"]),
-  new Card(111, "climatology", 11, "blue", 1, [""]),
+  new Card(111, "climatology", 11, "blue", 1, []),
   new Card(112, "solar sailing", 11, "blue", 3, ["splay", "win"]),
   new Card(113, "escapism", 11, "purple", 1, ["junk", "execute"]),
   new Card(114, "whataboutism", 11, "purple", 1, ["score"]),
@@ -453,22 +521,20 @@ const renderScene = {
     // reset hovered answer index
     qc.hoveredAnswerIndex = null;
 
-    // render wrong counts on the left
-    image(WRONG_ICON, 40, 300, 45, 45);
-    textSize(40);
-    fill(255);
-    textAlign(LEFT, CENTER);
-    text(qc.incorrectCount, 75, 300);
-
     // name > effect
     if (optionsControl.mode === 0) {
       // render current name and pic on top
       textSize(36);
       fill(255);
+      noStroke();
       const currentCard = CARDS[qc.questionIds[qc.currentQuestionIndex]];
       textAlign(LEFT, CENTER);
       text(currentCard.name.toUpperCase(), 150, 30);
       image(getCardImage.pic(currentCard), 60, 60, 100, 100);
+      noFill();
+      stroke(20);
+      strokeWeight(20);
+      square(60, 60, 100, 20);
 
       // render 4 answers (desc) vertically
       for (let i = 0; i < 4; i++) {
@@ -518,6 +584,10 @@ const renderScene = {
       image(getCardImage.desc(currentCard), 300, 140, 370 * 1.4, 155 * 1.4);
 
       // render 6 answers (pic) in 2 columns
+      noFill();
+      stroke(20);
+      strokeWeight(32);
+
       for (let i = 0; i < 6; i++) {
         const answerCard = CARDS[qc.answerIds[i]];
         const col = i % 2;
@@ -529,6 +599,8 @@ const renderScene = {
           160,
           160,
         );
+        square(280 + col * 200, 360 + row * 200, 160, 36);
+
         // render correct/wrong icon at bottom right of image
         if (qc.markedAnswers[answerCard.id] === "correct") {
           image(
@@ -553,6 +625,63 @@ const renderScene = {
         }
       }
     }
+
+    // render wrong counts
+    image(WRONG_ICON, 40, 360, 45, 45);
+    textSize(40);
+    fill(255);
+    noStroke();
+    textAlign(LEFT, CENTER);
+    text(qc.incorrectCount, 75, 360);
+
+    // render progress x / total
+    textSize(32);
+    fill(255);
+    noStroke();
+    textAlign(CENTER, CENTER);
+    text(`${qc.currentQuestionIndex + 1} / ${qc.questionIds.length}`, 75, 300);
+
+    // render next button
+    if (qc.inspectModeEnabled) buttons.quiz.next.render();
+  },
+  inspect: function () {
+    const card = CARDS[inspectControl.id];
+    image(getCardImage.full(card), 300, 250, 525 * 1.1, 375 * 1.1);
+    buttons.inspect.google.render();
+
+    // render tags in rectangles
+    const tagColors = {
+      splay: color(255, 100, 100),
+      score: color(100, 255, 100),
+      junk: color(100, 100, 255),
+      execute: color(255, 255, 100),
+      win: color(255, 100, 255),
+    };
+    noStroke();
+    textSize(24);
+    card.tags.sort();
+    for (let i = 0; i < card.tags.length; i++) {
+      const tag = card.tags[i];
+      const x = 480;
+      const y = 520 + i * 60;
+      fill(tagColors[tag] || color(200));
+      rect(x, y, 180, 50, 10);
+      fill(0);
+      text(tag.toUpperCase(), x, y, 450);
+    }
+  },
+
+  result: function () {
+    const qc = quizControl;
+    textSize(48);
+    fill(255);
+    textAlign(CENTER, CENTER);
+    text(
+      `[${qc.questionIds.length} questions]\nYou got ${qc.incorrectCount} wrong`,
+      300,
+      300,
+    );
+    buttons.result.menu.render();
   },
 };
 
@@ -584,6 +713,7 @@ async function setup() {
   CARD_SHEET = await loadImage("./cards.jpg");
   CORRECT_ICON = await loadImage("./correct.png");
   WRONG_ICON = await loadImage("./wrong.png");
+
   createButtons();
   isLoaded = true;
 }
@@ -607,29 +737,13 @@ function draw() {
       break;
     case "QUIZ":
       renderScene.quiz();
-  }
-
-  return;
-
-  const dummyCard = CARDS[0];
-  // const dummyCard = CARDS[floor(frameCount / 10) % CARDS.length];
-  // image(getCardImage.full(dummyCard), 525 / 2, 375 / 2, 525, 375);
-
-  textSize(36);
-  textAlign(LEFT, CENTER);
-  fill(255);
-  text(dummyCard.name.toUpperCase(), 150, 50);
-
-  image(getCardImage.pic(dummyCard), 60, 80, 100, 100);
-  image(getCardImage.age(dummyCard), 60, 200, 100, 100);
-  for (let i = 0; i < 4; i++) {
-    image(
-      getCardImage.desc(dummyCard),
-      360,
-      180 + 200 * i,
-      370 * 1.2,
-      155 * 1.2,
-    );
+      break;
+    case "INSPECT":
+      renderScene.inspect();
+      break;
+    case "RESULT":
+      renderScene.result();
+      break;
   }
 }
 
@@ -653,8 +767,20 @@ function mousePressed() {
       return;
     case "QUIZ":
       const qc = quizControl;
+      if (qc.inspectModeEnabled && buttons.quiz.next.isHovered) {
+        return buttons.quiz.next.clicked();
+      }
       if (qc.hoveredAnswerIndex !== null) {
         const selectedAnswerId = qc.answerIds[qc.hoveredAnswerIndex];
+
+        // inspect card during inspect mode
+        if (qc.inspectModeEnabled) {
+          inspectControl.prevScene = "QUIZ";
+          inspectControl.id = selectedAnswerId;
+          scene = "INSPECT";
+          return;
+        }
+
         // mark selected answer if not already
         if (qc.markedAnswers[selectedAnswerId] === undefined) {
           const currentCard = CARDS[qc.questionIds[qc.currentQuestionIndex]];
@@ -668,6 +794,13 @@ function mousePressed() {
           }
         }
       }
+      return;
+    case "INSPECT":
+      if (buttons.inspect.google.isHovered)
+        return buttons.inspect.google.clicked();
+
+      // click any where else to go back
+      scene = inspectControl.prevScene;
       return;
   }
 }
