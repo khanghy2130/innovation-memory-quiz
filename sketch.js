@@ -93,7 +93,7 @@ function createButtons() {
           text("Lists", 0, 0);
         },
         () => {
-          console.log("clicked");
+          scene = "LISTS";
         },
       ),
 
@@ -174,7 +174,7 @@ function createButtons() {
     quiz: {
       next: new Btn(
         68,
-        700,
+        660,
         100,
         100,
         null,
@@ -196,8 +196,53 @@ function createButtons() {
           }
         },
       ),
+      quit: new Btn(
+        68,
+        800,
+        100,
+        60,
+        null,
+        () => {
+          textSize(28);
+          fill(240, 100, 100);
+          text("Quit", 0, 0);
+        },
+        () => (scene = "MENU"),
+      ),
     },
     inspect: {
+      nextCard: new Btn(
+        145,
+        600,
+        70,
+        50,
+        null,
+        () => {
+          textSize(28);
+          fill(200);
+          text(`>>`, 0, 0);
+        },
+        () => {
+          inspectControl.id++;
+          if (inspectControl.id >= CARDS.length) inspectControl.id = 0;
+        },
+      ),
+      previousCard: new Btn(
+        55,
+        600,
+        70,
+        50,
+        null,
+        () => {
+          textSize(28);
+          fill(200);
+          text(`<<`, 0, 0);
+        },
+        () => {
+          inspectControl.id--;
+          if (inspectControl.id < 0) inspectControl.id = CARDS.length - 1;
+        },
+      ),
       google: new Btn(
         100,
         520,
@@ -206,7 +251,7 @@ function createButtons() {
         null,
         () => {
           textSize(28);
-          fill(200);
+          fill(100, 250, 100);
           text(`Google`, 0, 0);
         },
         () => {
@@ -218,7 +263,7 @@ function createButtons() {
       ),
     },
     result: {
-      menu: new Btn(
+      back: new Btn(
         300,
         800,
         160,
@@ -227,15 +272,54 @@ function createButtons() {
         () => {
           textSize(36);
           fill(200);
-          text(`Menu`, 0, 0);
+          text(`Back`, 0, 0);
         },
         () => {
           scene = "MENU";
         },
       ),
     },
+    lists: {
+      back: new Btn(
+        450,
+        850,
+        150,
+        50,
+        null,
+        () => {
+          textSize(32);
+          fill(200);
+          text(`Back`, 0, 0);
+        },
+        () => {
+          scene = "MENU";
+        },
+      ),
+      tags: ["SCORE", "SPLAY", "JUNK", "EXECUTE", "WIN"].map((tag, i) => {
+        return new Btn(
+          80 + i * 110,
+          40,
+          100,
+          40,
+          () => listsControl.tag === tag,
+          () => {
+            textSize(16);
+            fill(255);
+            text(tag, 0, 0);
+          },
+          () => {
+            listsControl.tag = tag;
+          },
+        );
+      }),
+    },
   };
 }
+
+let listsControl = {
+  tag: "SCORE", // SCORE, SPLAY, JUNK, EXECUTE, WIN
+  hoveredCardId: null, // card id
+};
 
 let inspectControl = {
   id: 0,
@@ -270,7 +354,7 @@ function initQuiz() {
     CARDS.filter((c) => optionsControl.selectedAges.includes(c.age)).map(
       (c) => c.id,
     ),
-  ).slice(0, optionsControl.qCount);
+  ).slice(0, 1 || optionsControl.qCount);
 
   // generate answers for the first question
   generateAnswers();
@@ -529,7 +613,7 @@ const renderScene = {
       noStroke();
       const currentCard = CARDS[qc.questionIds[qc.currentQuestionIndex]];
       textAlign(LEFT, CENTER);
-      text(currentCard.name.toUpperCase(), 150, 30);
+      text(currentCard.name.toUpperCase(), 150, 40);
       image(getCardImage.pic(currentCard), 60, 60, 100, 100);
       noFill();
       stroke(20);
@@ -626,28 +710,32 @@ const renderScene = {
       }
     }
 
+    // render progress x / total
+    textSize(36);
+    fill(255);
+    noStroke();
+    textAlign(CENTER, CENTER);
+    text(`${qc.currentQuestionIndex + 1} / ${qc.questionIds.length}`, 68, 300);
+
     // render wrong counts
-    image(WRONG_ICON, 40, 360, 45, 45);
+    image(WRONG_ICON, 40, 380, 45, 45);
     textSize(40);
     fill(255);
     noStroke();
     textAlign(LEFT, CENTER);
-    text(qc.incorrectCount, 75, 360);
+    text(qc.incorrectCount, 75, 380);
 
-    // render progress x / total
-    textSize(32);
-    fill(255);
-    noStroke();
+    // render buttons
     textAlign(CENTER, CENTER);
-    text(`${qc.currentQuestionIndex + 1} / ${qc.questionIds.length}`, 75, 300);
-
-    // render next button
     if (qc.inspectModeEnabled) buttons.quiz.next.render();
+    buttons.quiz.quit.render();
   },
   inspect: function () {
     const card = CARDS[inspectControl.id];
     image(getCardImage.full(card), 300, 250, 525 * 1.1, 375 * 1.1);
     buttons.inspect.google.render();
+    buttons.inspect.nextCard.render();
+    buttons.inspect.previousCard.render();
 
     // render tags in rectangles
     const tagColors = {
@@ -670,18 +758,48 @@ const renderScene = {
       text(tag.toUpperCase(), x, y, 450);
     }
   },
-
   result: function () {
     const qc = quizControl;
     textSize(48);
     fill(255);
     textAlign(CENTER, CENTER);
     text(
-      `[${qc.questionIds.length} questions]\nYou got ${qc.incorrectCount} wrong`,
+      `${qc.questionIds.length} questions\nYou got ${qc.incorrectCount} wrong`,
       300,
       300,
     );
-    buttons.result.menu.render();
+    buttons.result.back.render();
+  },
+  lists: function () {
+    listsControl.hoveredCardId = null;
+
+    // render all tag buttons
+    textSize(32);
+    fill(255);
+    textAlign(CENTER, CENTER);
+    buttons.lists.tags.forEach((t) => t.render());
+    buttons.lists.back.render();
+
+    // render card pics with the selected tag
+    const cardsWithTag = CARDS.filter((c) =>
+      c.tags.includes(listsControl.tag.toLowerCase()),
+    );
+    for (let i = 0; i < cardsWithTag.length; i++) {
+      const card = cardsWithTag[i];
+      const col = i % 6;
+      const row = floor(i / 6);
+      image(getCardImage.pic(card), 75 + col * 90, 130 + row * 90, 90, 90);
+
+      // set hover
+      if (
+        mx > 75 + col * 90 - 45 &&
+        mx < 75 + col * 90 + 45 &&
+        my > 130 + row * 90 - 45 &&
+        my < 130 + row * 90 + 45
+      ) {
+        listsControl.hoveredCardId = card.id;
+      }
+    }
   },
 };
 
@@ -744,10 +862,13 @@ function draw() {
     case "RESULT":
       renderScene.result();
       break;
+    case "LISTS":
+      renderScene.lists();
+      break;
   }
 }
 
-function mousePressed() {
+function mouseReleased() {
   if (touchCountdown > 0) return;
   touchCountdown = 10; // delay next input
 
@@ -770,6 +891,7 @@ function mousePressed() {
       if (qc.inspectModeEnabled && buttons.quiz.next.isHovered) {
         return buttons.quiz.next.clicked();
       }
+      if (buttons.quiz.quit.isHovered) return buttons.quiz.quit.clicked();
       if (qc.hoveredAnswerIndex !== null) {
         const selectedAnswerId = qc.answerIds[qc.hoveredAnswerIndex];
 
@@ -798,9 +920,29 @@ function mousePressed() {
     case "INSPECT":
       if (buttons.inspect.google.isHovered)
         return buttons.inspect.google.clicked();
+      if (buttons.inspect.nextCard.isHovered)
+        return buttons.inspect.nextCard.clicked();
+      if (buttons.inspect.previousCard.isHovered)
+        return buttons.inspect.previousCard.clicked();
 
       // click any where else to go back
       scene = inspectControl.prevScene;
+      return;
+    case "RESULT":
+      if (buttons.result.back.isHovered) return buttons.result.back.clicked();
+      return;
+    case "LISTS":
+      buttons.lists.tags.forEach((t) => {
+        if (t.isHovered) t.clicked();
+      });
+      if (buttons.lists.back.isHovered) return buttons.lists.back.clicked();
+      // click any card to inspect
+      if (listsControl.hoveredCardId !== null) {
+        inspectControl.prevScene = "LISTS";
+        inspectControl.id = listsControl.hoveredCardId;
+        scene = "INSPECT";
+        return;
+      }
       return;
   }
 }
