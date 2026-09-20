@@ -89,7 +89,7 @@ function createButtons() {
         null,
         () => {
           textSize(22);
-          fill(200);
+          fill(250);
           text("Lists", 0, 0);
         },
         () => {
@@ -193,6 +193,7 @@ function createButtons() {
             qc.inspectCardId = null;
           } else {
             scene = "RESULT";
+            qc.endTime = millis();
           }
         },
       ),
@@ -271,7 +272,7 @@ function createButtons() {
         null,
         () => {
           textSize(36);
-          fill(200);
+          fill(250);
           text(`Back`, 0, 0);
         },
         () => {
@@ -288,7 +289,7 @@ function createButtons() {
         null,
         () => {
           textSize(32);
-          fill(200);
+          fill(250);
           text(`Back`, 0, 0);
         },
         () => {
@@ -331,6 +332,8 @@ let quizControl = {
   currentQuestionIndex: 0,
   answerIds: [], // card ids, for current question
 
+  startTime: null,
+  endTime: null,
   incorrectCount: 0,
   // enable inspect mode after selected the correct answer, allow click any answer to view its full card
   inspectModeEnabled: false,
@@ -348,13 +351,14 @@ function initQuiz() {
   qc.incorrectCount = 0;
   qc.inspectModeEnabled = false;
   qc.inspectCardId = null;
+  qc.startTime = millis();
 
   // get random unique cards to quiz from the selected ages,
   qc.questionIds = shuffle(
     CARDS.filter((c) => optionsControl.selectedAges.includes(c.age)).map(
       (c) => c.id,
     ),
-  ).slice(0, 1 || optionsControl.qCount);
+  ).slice(0, optionsControl.qCount);
 
   // generate answers for the first question
   generateAnswers();
@@ -631,23 +635,15 @@ const renderScene = {
           155 * 1.2,
         );
         // render correct/wrong icon at bottom right of image
-        if (qc.markedAnswers[answerCard.id] === "correct") {
+        let markedStatus = qc.markedAnswers[answerCard.id];
+        if (markedStatus)
           image(
-            CORRECT_ICON,
+            markedStatus === "correct" ? CORRECT_ICON : WRONG_ICON,
             360 + (370 * 1.2) / 2 - 20,
             170 + 200 * i + (155 * 1.2) / 2 - 20,
-            40,
-            40,
+            60,
+            60,
           );
-        } else if (qc.markedAnswers[answerCard.id] === "wrong") {
-          image(
-            WRONG_ICON,
-            360 + (370 * 1.2) / 2 - 20,
-            170 + 200 * i + (155 * 1.2) / 2 - 20,
-            40,
-            40,
-          );
-        }
 
         // set hover
         if (
@@ -686,17 +682,15 @@ const renderScene = {
         square(280 + col * 200, 360 + row * 200, 160, 36);
 
         // render correct/wrong icon at bottom right of image
-        if (qc.markedAnswers[answerCard.id] === "correct") {
+        let markedStatus = qc.markedAnswers[answerCard.id];
+        if (markedStatus)
           image(
-            CORRECT_ICON,
+            markedStatus === "correct" ? CORRECT_ICON : WRONG_ICON,
             280 + col * 200 + 60,
             360 + row * 200 + 60,
-            40,
-            40,
+            60,
+            60,
           );
-        } else if (qc.markedAnswers[answerCard.id] === "wrong") {
-          image(WRONG_ICON, 280 + col * 200 + 60, 360 + row * 200 + 60, 40, 40);
-        }
 
         // set hover
         if (
@@ -716,6 +710,10 @@ const renderScene = {
     noStroke();
     textAlign(CENTER, CENTER);
     text(`${qc.currentQuestionIndex + 1} / ${qc.questionIds.length}`, 68, 300);
+
+    // render time
+    textSize(36);
+    text(`${floor((millis() - qc.startTime) / 1000)}s`, 68, 480);
 
     // render wrong counts
     image(WRONG_ICON, 40, 380, 45, 45);
@@ -764,9 +762,9 @@ const renderScene = {
     fill(255);
     textAlign(CENTER, CENTER);
     text(
-      `${qc.questionIds.length} questions\nYou got ${qc.incorrectCount} wrong`,
+      `${qc.questionIds.length} questions\n${qc.incorrectCount} wrong\nTime: ${((qc.endTime - qc.startTime) / 1000).toFixed(1)}s`,
       300,
-      300,
+      200,
     );
     buttons.result.back.render();
   },
