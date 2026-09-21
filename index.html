@@ -3,6 +3,7 @@
   <head>
     <script src="https://cdn.jsdelivr.net/npm/p5@2.3.3/lib/p5.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/p5.sound@0.4.1/dist/p5.sound.min.js"></script>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <meta charset="utf-8" />
     <title>Innovation Memory Quiz</title>
     <style>
@@ -17,6 +18,20 @@
       min-height: 100vh;
       background-color: black;
       opacity: 1;
+
+      background-image: url('bg.jpg');
+
+      /* Scale the image to completely cover the element */
+      background-size: cover;
+
+      /* Center the image so the middle stays visible during resizing */
+      background-position: center;
+
+      /* Prevent the image from tiling if the container grows */
+      background-repeat: no-repeat;
+      
+      /* Optional: Keep the background fixed in place while scrolling */
+      background-attachment: fixed; 
     }
 
     main {

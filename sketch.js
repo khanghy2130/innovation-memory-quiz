@@ -5,13 +5,14 @@ let mx = 0,
 
 let scene = "MENU"; // LISTS, INSPECT, MENU, QUIZ, RESULT
 let optionsControl = {
-  selectedAges: [1, 2, 3, 4],
+  selectedAges: [1, 2],
   qCount: 10,
   mode: 0, // name > effect, effect > pic
 };
 
 let CARD_SHEET; // 5250 x 4500; each is 525 x 375
 let CORRECT_ICON, WRONG_ICON;
+let sounds = {};
 
 class Card {
   constructor(id, name, age, color, picIndex, tags) {
@@ -44,7 +45,10 @@ class Btn {
     this.h = h;
     this.checkHighlight = checkHighlight;
     this.renderContent = renderContent;
-    this.clicked = clicked;
+    this.clicked = () => {
+      clicked();
+      sounds.click.play();
+    };
 
     this.isHovered = false;
   }
@@ -194,6 +198,11 @@ function createButtons() {
           } else {
             scene = "RESULT";
             qc.endTime = millis();
+            if (qc.incorrectCount === 0) {
+              sounds.win.play();
+            } else {
+              sounds.lose.play();
+            }
           }
         },
       ),
@@ -332,6 +341,9 @@ let quizControl = {
   currentQuestionIndex: 0,
   answerIds: [], // card ids, for current question
 
+  winGif: null,
+  loseGif: null,
+
   startTime: null,
   endTime: null,
   incorrectCount: 0,
@@ -345,6 +357,11 @@ let quizControl = {
 
 function initQuiz() {
   const qc = quizControl;
+
+  if (optionsControl.selectedAges.length === 0) {
+    // if no ages selected, select all ages
+    optionsControl.selectedAges = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+  }
 
   scene = "QUIZ";
   qc.currentQuestionIndex = 0;
@@ -362,6 +379,10 @@ function initQuiz() {
 
   // generate answers for the first question
   generateAnswers();
+
+  // get random win and lose gifs
+  qc.winGif = random(GIFS.win);
+  qc.loseGif = random(GIFS.lose);
 }
 
 function generateAnswers() {
@@ -412,6 +433,29 @@ function generateAnswers() {
       return;
   }
 }
+
+const GIF_LINKS = {
+  win: [
+    "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExa3Qyc2ZmMml4MW1nazA1ams1bTA3ZnUzaGlxMWV0aWMybmEyMWJtcyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/t3sZxY5zS5B0z5zMIz/giphy.gif",
+    "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExNjN1dmM5NHpwdGxtcG4wdGY4OHVudmdyM2JhZ2ZtZGlnYW93czIzeSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/VCZ34wOwmTpx1HpRht/giphy.gif",
+    "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExd28zanFlN2N6ZTFucXMyeHQxZ2gwOW1ubTdvNWVreDc3NzN5MXpkeCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/lnlAifQdenMxW/giphy.gif",
+    "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExeG1qeXFtbGlsZTAyc2RmcHh2b3Fndmc1cHYwNWI5b3NpNWx2a2twdCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/siliwOYZKdw7uvFEiB/giphy.gif",
+    "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExNDZoZWhpYnJwNzcyOG1raHkycTRkeXpqNHVxNm53cjI2djV6ZXNqdSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/iDi2hWvONu6VtnZUg5/giphy.gif",
+    "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExMHc2aGhseGhwc2xrMWFnbjdxdGh5Y2JhZ2Qza2F4aWdwcWtzZmk2diZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/hzqkBHPKL3z07ORokF/giphy.gif",
+  ],
+  lose: [
+    "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHZ1ZHY2NXUyc3d2Njh3ZDBtc25tNmxnYXpzc2VzazhvZnczYWs1ZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Cl9vN1IXs8lWNBEOQV/giphy.gif",
+    "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExcHBmcWR1dzIwY2M4NDNmajMzanYxMGE0ZmxkM2IzdW5mcXl4bzVldCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L8xiAoWc5rDoncOTQb/giphy.gif",
+    "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExbTZodWxkbHV4emh0MmszOTAwaDl6bnR0bDhianBlYzZjYm8zMm0xZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fxt1rWnpmyC43Ob4yD/giphy.gif",
+    "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExbmFiaWh2cHRseDVlenB3bW5zcWJhbjQ1dGVkZ3B6OGdtemUxM3JzbiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/qiw4VaWbXYDQqK6mgm/giphy.gif",
+    "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExemQxcjYxbDhkcGgzY3UzaWx2c21mZ3JtMnFqYnNnb3d3NjZiZnFtMCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/gJ37zufSHnARnzObsl/giphy.gif",
+    "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExd2YxYnB6dXk5cjZ4eDVyZnhjaWYwbjI5eG9ma2J2Z2JuYjNoc3E3NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/93doEwwvFjO9oN2avi/giphy.gif",
+  ],
+};
+let GIFS = {
+  win: [],
+  lose: [],
+};
 
 // tags: SPLAY, SCORE, JUNK, EXECUTE, WIN
 const CARDS = [
@@ -766,6 +810,11 @@ const renderScene = {
       300,
       200,
     );
+    if (qc.incorrectCount === 0) {
+      image(qc.winGif, 300, 500, 300, 300);
+    } else {
+      image(qc.loseGif, 300, 500, 300, 300);
+    }
     buttons.result.back.render();
   },
   lists: function () {
@@ -830,6 +879,19 @@ async function setup() {
   CORRECT_ICON = await loadImage("./correct.png");
   WRONG_ICON = await loadImage("./wrong.png");
 
+  for (let i = 0; i < GIF_LINKS.win.length; i++) {
+    GIFS.win[i] = await loadImage(GIF_LINKS.win[i]);
+  }
+  for (let i = 0; i < GIF_LINKS.lose.length; i++) {
+    GIFS.lose[i] = await loadImage(GIF_LINKS.lose[i]);
+  }
+
+  sounds.correct = await loadSound("./sounds/correct.mp3");
+  sounds.incorrect = await loadSound("./sounds/incorrect.mp3");
+  sounds.click = await loadSound("./sounds/click.mp3");
+  sounds.win = await loadSound("./sounds/win.mp3");
+  sounds.lose = await loadSound("./sounds/lose.mp3");
+
   createButtons();
   isLoaded = true;
 }
@@ -845,7 +907,7 @@ function draw() {
   cursor(ARROW);
   touchCountdown--; // update input delay
 
-  background(20);
+  clear();
 
   switch (scene) {
     case "MENU":
@@ -890,6 +952,8 @@ function mouseReleased() {
         return buttons.quiz.next.clicked();
       }
       if (buttons.quiz.quit.isHovered) return buttons.quiz.quit.clicked();
+
+      // clicking any answer?
       if (qc.hoveredAnswerIndex !== null) {
         const selectedAnswerId = qc.answerIds[qc.hoveredAnswerIndex];
 
@@ -898,6 +962,7 @@ function mouseReleased() {
           inspectControl.prevScene = "QUIZ";
           inspectControl.id = selectedAnswerId;
           scene = "INSPECT";
+          sounds.click.play();
           return;
         }
 
@@ -906,11 +971,13 @@ function mouseReleased() {
           const currentCard = CARDS[qc.questionIds[qc.currentQuestionIndex]];
           if (selectedAnswerId === currentCard.id) {
             qc.markedAnswers[selectedAnswerId] = "correct";
+            sounds.correct.play();
             // enable inspect mode if selected correct answer
             qc.inspectModeEnabled = true;
           } else {
             qc.markedAnswers[selectedAnswerId] = "wrong";
             qc.incorrectCount++;
+            sounds.incorrect.play();
           }
         }
       }
