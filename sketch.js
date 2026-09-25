@@ -271,6 +271,21 @@ function createButtons() {
           window.open(url, "_blank");
         },
       ),
+      back: new Btn(
+        300,
+        800,
+        160,
+        60,
+        null,
+        () => {
+          textSize(36);
+          fill(250);
+          text(`Back`, 0, 0);
+        },
+        () => {
+          scene = inspectControl.prevScene;
+        },
+      ),
     },
     result: {
       back: new Btn(
@@ -776,6 +791,7 @@ const renderScene = {
     buttons.inspect.google.render();
     buttons.inspect.nextCard.render();
     buttons.inspect.previousCard.render();
+    buttons.inspect.back.render();
 
     // render tags in rectangles
     const tagColors = {
@@ -885,6 +901,8 @@ async function setup() {
   }
 
   sounds.correct = await loadSound("./sounds/correct.mp3");
+  // set lower volume for correct sound
+  sounds.correct.amp(0.4);
   sounds.incorrect = await loadSound("./sounds/incorrect.mp3");
   sounds.click = await loadSound("./sounds/click.mp3");
   sounds.win = await loadSound("./sounds/win.mp3");
@@ -987,9 +1005,8 @@ function mouseReleased() {
         return buttons.inspect.nextCard.clicked();
       if (buttons.inspect.previousCard.isHovered)
         return buttons.inspect.previousCard.clicked();
+      if (buttons.inspect.back.isHovered) return buttons.inspect.back.clicked();
 
-      // click any where else to go back
-      scene = inspectControl.prevScene;
       return;
     case "RESULT":
       if (buttons.result.back.isHovered) return buttons.result.back.clicked();
